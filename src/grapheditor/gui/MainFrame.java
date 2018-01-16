@@ -11,8 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
@@ -22,18 +20,16 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class MainFrame extends javax.swing.JFrame {
 
     private final GraphDrawPanel drawPanel;
-    private JFileChooser openFileChooser;
-    private JFileChooser saveFileChooser;
-    private String myExtension = "grp";
-    private FileNameExtensionFilter myFilter = new FileNameExtensionFilter("Graphs", myExtension);
-    private String ipeExtension = "ipe";
-    private FileNameExtensionFilter ipeFilter = new FileNameExtensionFilter("IPE XML", ipeExtension);
-    private FileNameExtensionFilter ipe6Filter = new FileNameExtensionFilter("IPE 6 XML", ipeExtension);
-    private FileNameExtensionFilter ipe7Filter = new FileNameExtensionFilter("IPE 7 XML", ipeExtension);
-    private IPEImporter ipeImporter = new IPEImporter();
-    private IPEExporter ipeExporter = new IPEExporter();
-    private final RadiusSlider radiusSlider = new RadiusSlider(this, false);
-    private final IntersectionDAGDialog intersectionDAG = new IntersectionDAGDialog(this, false);
+    private final JFileChooser openFileChooser;
+    private final JFileChooser saveFileChooser;
+    private final String myExtension = "grp";
+    private final FileNameExtensionFilter myFilter = new FileNameExtensionFilter("Graphs", myExtension);
+    private final String ipeExtension = "ipe";
+    private final FileNameExtensionFilter ipeFilter = new FileNameExtensionFilter("IPE XML", ipeExtension);
+    private final FileNameExtensionFilter ipe6Filter = new FileNameExtensionFilter("IPE 6 XML", ipeExtension);
+    private final FileNameExtensionFilter ipe7Filter = new FileNameExtensionFilter("IPE 7 XML", ipeExtension);
+    private final IPEImporter ipeImporter = new IPEImporter();
+    private final IPEExporter ipeExporter = new IPEExporter();
 
     /** Creates new form MainFrame */
     public MainFrame() {
@@ -52,21 +48,6 @@ public class MainFrame extends javax.swing.JFrame {
         saveFileChooser.addChoosableFileFilter(ipe6Filter);
         saveFileChooser.addChoosableFileFilter(ipe7Filter);
         saveFileChooser.setFileFilter(myFilter);
-
-        // Radius slider
-        radiusSlider.addChangeListener(new ChangeListener() {
-
-            public void stateChanged(ChangeEvent e) {
-                drawPanel.setRadius(radiusSlider.getRadius());
-            }
-        });
-
-        drawPanel.addGraphChangeListener(new ChangeListener() {
-
-            public void stateChanged(ChangeEvent e) {
-                intersectionDAG.computeIntersectionGraph(drawPanel.getGraph());
-            }
-        });
     }
 
     /** This method is called from within the constructor to
@@ -79,20 +60,38 @@ public class MainFrame extends javax.swing.JFrame {
     private void initComponents() {
 
         centerPanel = new javax.swing.JPanel();
+        jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        radiusSlider = new javax.swing.JSlider();
         menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         newMenuItem = new javax.swing.JMenuItem();
         openMenuItem = new javax.swing.JMenuItem();
         saveMenuItem = new javax.swing.JMenuItem();
-        controlsMenu = new javax.swing.JMenu();
-        radiusCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
-        intersectionDAGCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
+        viewMenu = new javax.swing.JMenu();
+        highlightFreeCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Graph Editor");
 
         centerPanel.setPreferredSize(new java.awt.Dimension(800, 600));
         centerPanel.setLayout(new java.awt.BorderLayout());
+
+        jLabel1.setText("Radius");
+        jPanel1.add(jLabel1);
+
+        radiusSlider.setMaximum(1000);
+        radiusSlider.setMinimum(1);
+        radiusSlider.setValue(500);
+        radiusSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                radiusSliderStateChanged(evt);
+            }
+        });
+        jPanel1.add(radiusSlider);
+
+        centerPanel.add(jPanel1, java.awt.BorderLayout.PAGE_END);
+
         getContentPane().add(centerPanel, java.awt.BorderLayout.CENTER);
 
         fileMenu.setText("File");
@@ -126,25 +125,18 @@ public class MainFrame extends javax.swing.JFrame {
 
         menuBar.add(fileMenu);
 
-        controlsMenu.setText("Controls");
+        viewMenu.setText("View");
 
-        radiusCheckBoxMenuItem.setText("Radius");
-        radiusCheckBoxMenuItem.addActionListener(new java.awt.event.ActionListener() {
+        highlightFreeCheckBoxMenuItem.setSelected(true);
+        highlightFreeCheckBoxMenuItem.setText("Highlight Uncrossed Edges");
+        highlightFreeCheckBoxMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                radiusCheckBoxMenuItemActionPerformed(evt);
+                highlightFreeCheckBoxMenuItemActionPerformed(evt);
             }
         });
-        controlsMenu.add(radiusCheckBoxMenuItem);
+        viewMenu.add(highlightFreeCheckBoxMenuItem);
 
-        intersectionDAGCheckBoxMenuItem.setText("Intersection DAG");
-        intersectionDAGCheckBoxMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                intersectionDAGCheckBoxMenuItemActionPerformed(evt);
-            }
-        });
-        controlsMenu.add(intersectionDAGCheckBoxMenuItem);
-
-        menuBar.add(controlsMenu);
+        menuBar.add(viewMenu);
 
         setJMenuBar(menuBar);
 
@@ -249,21 +241,13 @@ public class MainFrame extends javax.swing.JFrame {
         drawPanel.setGraph(new Graph());
     }//GEN-LAST:event_newMenuItemActionPerformed
 
-    private void radiusCheckBoxMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radiusCheckBoxMenuItemActionPerformed
-        if (radiusCheckBoxMenuItem.isSelected()) {
-            radiusSlider.setVisible(true);
-        } else {
-            radiusSlider.setVisible(false);
-        }
-    }//GEN-LAST:event_radiusCheckBoxMenuItemActionPerformed
+    private void radiusSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_radiusSliderStateChanged
+        drawPanel.setRadius(radiusSlider.getValue() / 500.0);
+    }//GEN-LAST:event_radiusSliderStateChanged
 
-    private void intersectionDAGCheckBoxMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_intersectionDAGCheckBoxMenuItemActionPerformed
-        if (intersectionDAGCheckBoxMenuItem.isSelected()) {
-            intersectionDAG.setVisible(true);
-        } else {
-            intersectionDAG.setVisible(false);
-        }
-    }//GEN-LAST:event_intersectionDAGCheckBoxMenuItemActionPerformed
+    private void highlightFreeCheckBoxMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_highlightFreeCheckBoxMenuItemActionPerformed
+        drawPanel.setHighlightFreeEdges(highlightFreeCheckBoxMenuItem.isSelected());
+    }//GEN-LAST:event_highlightFreeCheckBoxMenuItemActionPerformed
 
     /**
      * @param args the command line arguments
@@ -278,13 +262,15 @@ public class MainFrame extends javax.swing.JFrame {
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel centerPanel;
-    private javax.swing.JMenu controlsMenu;
     private javax.swing.JMenu fileMenu;
-    private javax.swing.JCheckBoxMenuItem intersectionDAGCheckBoxMenuItem;
+    private javax.swing.JCheckBoxMenuItem highlightFreeCheckBoxMenuItem;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem newMenuItem;
     private javax.swing.JMenuItem openMenuItem;
-    private javax.swing.JCheckBoxMenuItem radiusCheckBoxMenuItem;
+    private javax.swing.JSlider radiusSlider;
     private javax.swing.JMenuItem saveMenuItem;
+    private javax.swing.JMenu viewMenu;
     // End of variables declaration//GEN-END:variables
 }

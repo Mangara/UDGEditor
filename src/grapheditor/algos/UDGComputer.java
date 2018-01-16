@@ -2,6 +2,7 @@ package grapheditor.algos;
 
 import graphs.graph.Graph;
 import graphs.graph.GraphVertex;
+import java.util.List;
 
 /**
  *
@@ -16,13 +17,27 @@ public class UDGComputer {
         double radiusSquared = radius * radius;
         g.clearEdges();
         
-        for (GraphVertex v1 : g.getVertices()) {
+        List<GraphVertex> vertices = g.getVertices();
+        
+        for (int i = 0; i < vertices.size(); i++) {
+            GraphVertex v1 = vertices.get(i);
+            
+            for (int j = i + 1; j < vertices.size(); j++) {
+                GraphVertex v2 = vertices.get(j);
+                
+                if (distanceSquared(v1, v2) <= radiusSquared) {
+                    g.addEdge(v1, v2);
+                }
+            }
+        }
+        
+        /*for (GraphVertex v1 : g.getVertices()) {
             for (GraphVertex v2 : g.getVertices()) {
                 if (distanceSquared(v1, v2) <= radiusSquared && !g.containsEdge(v1, v2)) {
                     g.addEdge(v1, v2);
                 }
             }
-        }
+        }*/
     }
 
     private static double distanceSquared(GraphVertex v1, GraphVertex v2) {
